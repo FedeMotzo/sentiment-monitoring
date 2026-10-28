@@ -6,6 +6,8 @@ Progetto finale del modulo "MLOps e Machine Learning in produzione".
 
 L'obiettivo è costruire un servizio che classifica il sentiment dei testi social (positivo, neutro, negativo) usando il modello pre-addestrato [twitter-roberta-base-sentiment-latest](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest) e portarlo "in produzione": API, test, Docker, CI/CD, monitoraggio e orchestrazione.
 
+Le scelte fatte, i limiti e le verifiche sono spiegati nel notebook [`documentazione.ipynb`](documentazione.ipynb), che si può aprire ed eseguire su Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/FedeMotzo/sentiment-monitoring/blob/main/documentazione.ipynb)
+
 ## Ambiente
 
 Il progetto usa Python 3.12.
@@ -126,7 +128,7 @@ docker run -p 8000:8000 ghcr.io/fedemotzo/sentiment-monitoring:main
 
 ## Stile del codice
 
-Il codice è formattato con **black** e controllato con **flake8** (configurazione in `.flake8`).
+Il codice è formattato con **black** e controllato con **flake8** (configurazione in `.flake8` e `pyproject.toml`).
 
 ```bash
 black .        # formatta il codice
