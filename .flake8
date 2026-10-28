@@ -1,0 +1,6 @@
+[flake8]
+# stessa lunghezza di riga di black
+max-line-length = 88
+# E203 (spazio prima dei due punti) va in conflitto con lo stile di black
+extend-ignore = E203
+exclude = .venv, .git, __pycache__
