@@ -1,0 +1,160 @@
+{
+  "uid": "sentiment-api",
+  "title": "Sentiment API",
+  "tags": ["sentiment"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {"from": "now-30m", "to": "now"},
+  "schemaVersion": 41,
+  "panels": [
+    {
+      "type": "row",
+      "title": "Servizio",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "API raggiungibile",
+      "description": "1 = Prometheus riesce a leggere le metriche dell'API, 0 = API non raggiungibile",
+      "gridPos": {"h": 6, "w": 4, "x": 0, "y": 1},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "up{job=\"sentiment-api\"}"}],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"0": {"text": "NO", "color": "red"}, "1": {"text": "SI", "color": "green"}}}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        }
+      },
+      "options": {"colorMode": "background", "reduceOptions": {"calcs": ["lastNotNull"]}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Richieste al secondo",
+      "gridPos": {"h": 6, "w": 10, "x": 4, "y": 1},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"refId": "A", "expr": "sum by (endpoint) (rate(sentiment_requests_total[1m]))", "legendFormat": "{{endpoint}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Latenza di /predict (95° percentile)",
+      "description": "Il 95% delle richieste è più veloce di questo valore. La linea rossa è la soglia dell'alert (1 secondo).",
+      "gridPos": {"h": 6, "w": 10, "x": 14, "y": 1},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(sentiment_request_latency_seconds_bucket{endpoint=\"/predict\"}[1m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {"thresholdsStyle": {"mode": "line"}},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Errori (% delle richieste a /predict)",
+      "description": "4xx = input non valido inviato dal client, 5xx = errore del servizio (soglia dell'alert: 5%)",
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 7},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(sentiment_requests_total{endpoint=\"/predict\", status=~\"4..\"}[5m])) / sum(rate(sentiment_requests_total{endpoint=\"/predict\"}[5m]))",
+          "legendFormat": "errori 4xx (client)"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(sentiment_requests_total{endpoint=\"/predict\", status=~\"5..\"}[5m])) / sum(rate(sentiment_requests_total{endpoint=\"/predict\"}[5m]))",
+          "legendFormat": "errori 5xx (servizio)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "custom": {"thresholdsStyle": {"mode": "line"}},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 0.05}]}
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Predizioni totali",
+      "gridPos": {"h": 6, "w": 4, "x": 12, "y": 7},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "sum(sentiment_predictions_total)"}],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}
+    },
+    {
+      "type": "row",
+      "title": "Modello e dati in ingresso (segnali di drift)",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 13},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Classi predette (% sulle predizioni degli ultimi 15 minuti)",
+      "description": "Se la quota di una classe cambia molto rispetto al solito, il tono dei testi in arrivo o il tipo di testi sono cambiati.",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (label) (increase(sentiment_predictions_total[15m])) / ignoring(label) group_left sum(increase(sentiment_predictions_total[15m]))",
+          "legendFormat": "{{label}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "percentunit", "min": 0, "max": 1},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "positive"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]},
+          {"matcher": {"id": "byName", "options": "neutral"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]},
+          {"matcher": {"id": "byName", "options": "negative"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]}
+        ]
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Confidenza media del modello",
+      "description": "Media del punteggio della classe predetta. Se cala, il modello è meno sicuro sui testi nuovi.",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(sentiment_prediction_confidence_sum[15m]) / rate(sentiment_prediction_confidence_count[15m])",
+          "legendFormat": "confidenza media"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Lunghezza media dei testi (caratteri)",
+      "description": "Un cambio netto indica testi diversi da quelli soliti (ad esempio recensioni lunghe invece di tweet).",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(sentiment_text_length_chars_sum[15m]) / rate(sentiment_text_length_chars_count[15m])",
+          "legendFormat": "lunghezza media"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0}}
+    }
+  ]
+}

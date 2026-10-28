@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: sentiment
+    folder: Sentiment
+    type: file
+    options:
+      # Grafana carica tutti i file .json di questa cartella
+      path: /etc/grafana/provisioning/dashboards
