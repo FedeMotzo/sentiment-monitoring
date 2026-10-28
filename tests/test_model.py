@@ -16,7 +16,9 @@ FRASI_NEGATIVE = [
 
 
 def test_etichetta_sempre_tra_le_tre_classi():
-    for testo in FRASI_POSITIVE + FRASI_NEGATIVE + ["The meeting is at 3pm", "ok", "?!"]:
+    for testo in (
+        FRASI_POSITIVE + FRASI_NEGATIVE + ["The meeting is at 3pm", "ok", "?!"]
+    ):
         assert predici_sentiment(testo)["label"] in CLASSI
 
 
@@ -43,7 +45,8 @@ def test_frasi_chiaramente_negative():
 
 
 def test_testo_piu_lungo_di_512_token():
-    # Prima della correzione con max_length=512 questo testo mandava in errore il modello
+    # Prima della correzione con max_length=512
+    # questo testo mandava in errore il modello
     risultato = predici_sentiment("word " * 1000)
     assert risultato["label"] in CLASSI
 

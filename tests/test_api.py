@@ -42,7 +42,8 @@ def test_predict_testo_troppo_lungo():
 
 
 def test_predict_testo_lungo_al_limite():
-    # Testo valido ma più lungo dei 512 token del modello: deve essere troncato, non dare errore
+    # Testo valido ma più lungo dei 512 token del modello:
+    # deve essere troncato, non dare errore
     risposta = client.post("/predict", json={"text": "a " * (MAX_CARATTERI // 2)})
     assert risposta.status_code == 200
     assert risposta.json()["label"] in CLASSI
