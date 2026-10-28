@@ -13,3 +13,17 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+## Avviare l'API
+
+```bash
+uvicorn src.app:app --reload
+```
+
+Al primo avvio il modello viene scaricato da Hugging Face (circa 500 MB).
+
+Endpoint:
+- `GET /health`: controlla che il servizio sia attivo;
+- `POST /predict`: riceve `{"text": "..."}` e restituisce l'etichetta (`positive`, `neutral` o `negative`) con i punteggi delle tre classi.
+
+La documentazione interattiva è su `http://127.0.0.1:8000/docs`. Per una prova veloce: `python scripts/prova_api.py`.
