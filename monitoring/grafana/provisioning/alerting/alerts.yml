@@ -1,0 +1,112 @@
+apiVersion: 1
+
+# Ogni regola segue lo schema visto a lezione:
+# A = query su Prometheus, B = Reduce (ultimo valore), C = Threshold (soglia)
+groups:
+  - orgId: 1
+    name: sentiment-api
+    folder: Sentiment
+    interval: 30s
+    rules:
+      - uid: api-non-raggiungibile
+        title: API non raggiungibile
+        condition: C
+        for: 1m
+        noDataState: Alerting
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: Prometheus non riesce a leggere le metriche dell'API da almeno 1 minuto
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: up{job="sentiment-api"}
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: {type: lt, params: [1]}
+
+      - uid: latenza-alta
+        title: Latenza alta su /predict
+        condition: C
+        for: 2m
+        # senza traffico non ci sono dati sulla latenza: non è un problema
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: Il 95° percentile della latenza di /predict supera 1 secondo da almeno 2 minuti
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: histogram_quantile(0.95, sum by (le) (rate(sentiment_request_latency_seconds_bucket{endpoint="/predict"}[1m])))
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: {type: gt, params: [1]}
+
+      - uid: errori-server
+        title: Troppi errori del servizio
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: Più del 5% delle richieste a /predict finisce con un errore 5xx
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: (sum(rate(sentiment_requests_total{endpoint="/predict", status=~"5.."}[5m])) or vector(0)) / sum(rate(sentiment_requests_total{endpoint="/predict"}[5m]))
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: {type: gt, params: [0.05]}

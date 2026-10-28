@@ -58,6 +58,20 @@ Per generare un po' di traffico con tweet reali del dataset pubblico [TweetEval]
 python scripts/genera_traffico.py --n 200
 ```
 
+In Grafana la dashboard **Sentiment API** (cartella *Sentiment*) è già pronta. Mostra:
+- **servizio:** API raggiungibile, richieste al secondo, latenza, errori;
+- **modello e dati:** classi predette, confidenza media, lunghezza dei testi.
+
+Alert configurati (menu *Alerting → Alert rules*):
+
+| Alert | Condizione |
+|---|---|
+| API non raggiungibile | Prometheus non legge l'API per 1 minuto |
+| Latenza alta su /predict | 95° percentile sopra 1 secondo per 2 minuti |
+| Troppi errori del servizio | errori 5xx sopra il 5% delle richieste per 5 minuti |
+
+Per vedere scattare l'alert sulla latenza: `python scripts/simula_carico.py` (circa 3 minuti e mezzo). Per quello sull'API basta fermarla: `docker compose stop api`.
+
 ## Test
 
 ```bash
