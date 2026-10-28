@@ -28,6 +28,15 @@ Endpoint:
 
 La documentazione interattiva è su `http://127.0.0.1:8000/docs`. Per una prova veloce: `python scripts/prova_api.py`.
 
+## Docker
+
+```bash
+docker build -t sentiment-api .
+docker run -p 8000:8000 sentiment-api
+```
+
+Il modello viene scaricato durante la build, quindi il container parte in pochi secondi e funziona anche senza internet.
+
 ## Test
 
 ```bash
