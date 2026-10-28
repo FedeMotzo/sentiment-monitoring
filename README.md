@@ -27,3 +27,12 @@ Endpoint:
 - `POST /predict`: riceve `{"text": "..."}` e restituisce l'etichetta (`positive`, `neutral` o `negative`) con i punteggi delle tre classi.
 
 La documentazione interattiva è su `http://127.0.0.1:8000/docs`. Per una prova veloce: `python scripts/prova_api.py`.
+
+## Test
+
+```bash
+pytest
+```
+
+- `tests/test_api.py`: test dell'API (schema delle risposte, input vuoti, troppo lunghi o sbagliati);
+- `tests/test_model.py`: test sul comportamento del modello (tre classi, frasi chiaramente positive e negative, testi più lunghi del limite del modello).
