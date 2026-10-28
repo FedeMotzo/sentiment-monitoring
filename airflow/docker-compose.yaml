@@ -59,7 +59,10 @@ x-airflow-common:
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    # niente DAG di esempio: nell'interfaccia resta solo il nostro
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    # indirizzo dell'API di sentiment (avviata con il docker-compose principale)
+    SENTIMENT_API_URL: ${SENTIMENT_API_URL:-http://host.docker.internal:8000}
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
@@ -77,6 +80,11 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    # campioni di dati raccolti dal DAG
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+  # permette di raggiungere l'API sul computer host anche su Linux
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
