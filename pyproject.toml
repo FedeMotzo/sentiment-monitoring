@@ -1,0 +1,3 @@
+[tool.black]
+# il notebook di documentazione non va formattato da black
+extend-exclude = "\\.ipynb$"
