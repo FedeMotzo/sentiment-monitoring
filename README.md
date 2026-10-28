@@ -40,6 +40,24 @@ docker run -p 8000:8000 sentiment-api
 
 Il modello viene scaricato durante la build, quindi il container parte in pochi secondi e funziona anche senza internet.
 
+## Monitoraggio
+
+Con Docker Compose si avviano insieme l'API, Prometheus (che raccoglie le metriche da `/metrics` ogni 5 secondi) e Grafana (già collegato a Prometheus).
+
+```bash
+docker compose up -d --build
+```
+
+- API: http://localhost:8000
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000 (utente `admin`, password `admin`)
+
+Per generare un po' di traffico con tweet reali del dataset pubblico [TweetEval](https://github.com/cardiffnlp/tweeteval):
+
+```bash
+python scripts/genera_traffico.py --n 200
+```
+
 ## Test
 
 ```bash
