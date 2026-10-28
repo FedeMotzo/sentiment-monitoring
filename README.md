@@ -26,7 +26,8 @@ Al primo avvio il modello viene scaricato da Hugging Face (circa 500 MB).
 
 Endpoint:
 - `GET /health`: controlla che il servizio sia attivo;
-- `POST /predict`: riceve `{"text": "..."}` e restituisce l'etichetta (`positive`, `neutral` o `negative`) con i punteggi delle tre classi.
+- `POST /predict`: riceve `{"text": "..."}` e restituisce l'etichetta (`positive`, `neutral` o `negative`) con i punteggi delle tre classi;
+- `GET /metrics`: metriche del servizio nel formato di Prometheus (richieste, latenza, classi predette, confidenza, lunghezza dei testi).
 
 La documentazione interattiva è su `http://127.0.0.1:8000/docs`. Per una prova veloce: `python scripts/prova_api.py`.
 
@@ -46,7 +47,8 @@ pytest
 ```
 
 - `tests/test_api.py`: test dell'API (schema delle risposte, input vuoti, troppo lunghi o sbagliati);
-- `tests/test_model.py`: test sul comportamento del modello (tre classi, frasi chiaramente positive e negative, testi più lunghi del limite del modello).
+- `tests/test_model.py`: test sul comportamento del modello (tre classi, frasi chiaramente positive e negative, testi più lunghi del limite del modello);
+- `tests/test_metrics.py`: test delle metriche esposte su `/metrics`.
 
 ## CI/CD
 
