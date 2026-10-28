@@ -1,0 +1,80 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # CI: stile del codice e test, a ogni push
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # Il modello di Hugging Face (circa 1 GB) viene salvato in cache
+      # così non va riscaricato a ogni esecuzione
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-twitter-roberta-sentiment
+
+      - name: Installazione dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Lint con flake8
+        run: flake8 .
+
+      - name: Controllo formattazione con black
+        run: black --check .
+
+      - name: Test con pytest
+        run: pytest -v
+
+  # CD: costruisce l'immagine e la pubblica su GitHub Packages,
+  # solo se i test sono passati e solo per il branch main
+  build-and-push-image:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Login a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag e label dell'immagine
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha
+
+      - name: Build e push dell'immagine
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
