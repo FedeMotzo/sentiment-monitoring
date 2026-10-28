@@ -72,6 +72,37 @@ Alert configurati (menu *Alerting → Alert rules*):
 
 Per vedere scattare l'alert sulla latenza: `python scripts/simula_carico.py` (circa 3 minuti e mezzo). Per quello sull'API basta fermarla: `docker compose stop api`.
 
+## Orchestrazione con Airflow
+
+Il DAG `airflow/dags/sentiment_dag.py` descrive il ciclo settimanale di controllo del modello:
+
+```
+inizio → raccogli_dati → valuta_modello → decidi_se_riaddestrare ─┬→ riaddestra_modello
+                                                                   └→ modello_ok
+```
+
+1. **raccogli_dati**: scarica un campione di 200 tweet etichettati (TweetEval) e lo salva in `airflow/data/`;
+2. **valuta_modello**: manda i testi all'API e calcola l'accuratezza;
+3. **decidi_se_riaddestrare**: se l'accuratezza è sotto la soglia (60%) va al riaddestramento, altrimenti a `modello_ok`;
+4. **riaddestra_modello**: versione minima, salva una richiesta di riaddestramento con i dati raccolti.
+
+Per avviarlo serve l'API attiva (`docker compose up -d` nella cartella principale), poi:
+
+```bash
+cd airflow
+echo -e "AIRFLOW_UID=$(id -u)" > .env
+docker compose up airflow-init
+docker compose up -d
+```
+
+Interfaccia su http://localhost:8080 (utente `airflow`, password `airflow`). Il DAG si chiama `sentiment_monitoring`.
+
+Per provare il ramo del riaddestramento si può alzare la soglia, con il DAG in pausa (altrimenti anche lo scheduler esegue gli stessi task):
+
+```bash
+docker compose exec -e SOGLIA_ACCURATEZZA=0.95 airflow-scheduler airflow dags test sentiment_monitoring
+```
+
 ## Test
 
 ```bash
