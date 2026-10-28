@@ -36,3 +36,12 @@ pytest
 
 - `tests/test_api.py`: test dell'API (schema delle risposte, input vuoti, troppo lunghi o sbagliati);
 - `tests/test_model.py`: test sul comportamento del modello (tre classi, frasi chiaramente positive e negative, testi più lunghi del limite del modello).
+
+## Stile del codice
+
+Il codice è formattato con **black** e controllato con **flake8** (configurazione in `.flake8`).
+
+```bash
+black .        # formatta il codice
+flake8         # controlla lo stile
+```
