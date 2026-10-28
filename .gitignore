@@ -1,0 +1,16 @@
+# ambiente virtuale
+.venv/
+venv/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# file con password e configurazioni locali
+.env
+
+# editor e sistema operativo
+.vscode/
+.idea/
+.DS_Store
